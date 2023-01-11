@@ -23,6 +23,7 @@ import nltk
 from nltk.corpus import stopwords
 import string
 import joblib
+from gevent.pywsgi import WSGIServer
 
 # Create app
 app = Flask(__name__)
@@ -62,15 +63,17 @@ def convert(list):
 
 # Function to load the model
 def load_tree_model():
-    global model_tree
-    global vectorizer
+    
     # Loading neccesary 
-    vectorizer_path = "C:/Users/aniru/datasets/Hate Speech Detection/Davidson_Dataset/vectorizer.pkl"
+    vectorizer_path = "vectorizer.pkl"
     vectorizer = joblib.load(vectorizer_path)
-    path ="C:/Users/aniru/datasets/Hate Speech Detection/Davidson_Dataset/model/model_decision_Tree.pkl"
+    path ="model_decision_Tree.pkl"
     model_tree = pickle.load(open(path, 'rb'))
+    return vectorizer,model_tree
 
 def generateClassification(msg_list):
+    vectorizer_path = "vectorizer.pkl"
+    vectorizer = joblib.load(vectorizer_path)
     vector = vectorizer.transform(msg_list).toarray()
     classification = model_tree.predict(vector)
     classification = listToString(classification)
@@ -126,6 +129,8 @@ def dealFormData():
 # Home page
 @app.route("/", methods=['GET', 'POST'])
 def home():
+    global model_tree
+    global vectorizer
     """Home page of app with form"""
     # Create form
     form1 = ReusableForm(request.form)
@@ -155,4 +160,6 @@ if __name__ == "__main__":
            "please wait until server has fully started"))
     load_tree_model()
     # Run app
-    app.run(host="0.0.0.0", port=80)
+    #app.run(host="0.0.0.0", port=80)
+    #http_server = WSGIServer(('', 5000), app)
+    #http_server.serve_forever()
